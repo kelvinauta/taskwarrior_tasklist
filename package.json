@@ -1,0 +1,11 @@
+{
+  "name": "task_list",
+  "module": "task_list.js",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
