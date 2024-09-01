@@ -2,6 +2,8 @@
 import { parseArgs } from "util";
 import { existsSync, statSync } from "node:fs";
 import { join } from 'node:path';
+// Constants Globales
+const DEV = false;
 
 // Utils
 function convertirATextoAObjeto(str) {
@@ -22,10 +24,22 @@ function convertirObjetoATexto(obj) {
     return Object.entries(obj).map(([key, value]) => `${key}:${value}`).join(' ');
 }
 function obtenerNumeroDeString(str) {
+    if(!str) return null;
+    if(typeof str !== 'string') return null
     const numeroEncontrado = str.match(/\d+/);
     return numeroEncontrado ? parseInt(numeroEncontrado[0], 10) : null;
 }
-  
+
+async function runCommand(command){
+    if(!command) throw new Error("No se ingresó un comando");
+    if(DEV){
+        console.log("Comando: ", command);
+        return;
+    };
+    const process = Bun.spawn(command);
+    const response = await new Response(process.stdout).text();
+    return response;
+}
   
 
 // CLASES
@@ -91,13 +105,19 @@ class Task {
         const cmd = ["task", "add", `"${this.title}"`, ...params.split(' ')]; 
         return cmd;
     }
+    _validate_output_command(output){
+        if(DEV) return true;
+        let validate = false;
+        let text_confirmation = "Created task";
+        if(output.includes(text_confirmation)) validate = true;
+        
+        return validate;
+    }
     async run(depends){
         const cmd = this._cmd_build(depends)
-        const task_warrior_process = Bun.spawn(cmd);
-        const task_warrior_output = await new Response(task_warrior_process.stdout).text();
-        const TEXT_CONFIRMATION = "Created task";
+        const task_warrior_output = await runCommand(cmd);
         console.log( this.title,": ", task_warrior_output);
-        if(!task_warrior_output.includes(TEXT_CONFIRMATION)) throw new Error(`Error al crear tarea ${this.title}`);
+        if(!this._validate_output_command(task_warrior_output)) throw new Error(`Error al crear tarea ${this.title}`);
         this.id = obtenerNumeroDeString(task_warrior_output);
     }
 }
@@ -111,7 +131,7 @@ class RackTask{
     }
     _build_parameters_rack(){
         const parameters_rack = 
-            this.first_line_split > 0 ? 
+            this.first_line_split.length > 1 ? // Si hay más de un elemento en el array significa que hay parámetros porque el primer elemento es el título 
                 convertirATextoAObjeto(this.first_line_split.slice(1).join(" "))
                 : 
                 {};
