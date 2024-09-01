@@ -3,7 +3,7 @@ import { parseArgs } from "util";
 import { existsSync, statSync } from "node:fs";
 import { join } from 'node:path';
 // Constants Globales
-const DEV = false;
+const DEV = true;
 
 // Utils
 function convertirATextoAObjeto(str) {
@@ -142,7 +142,7 @@ class RackTask{
         
     };
     _build_tasks(){
-        const tasks = this.rack.split("\n").filter(str => str.trim() !== '').slice(1);
+        const tasks = this.rack.split("\n").slice(1).filter(str => str.trim() !== '');
         if(tasks.length === 0) throw new Error("No hay tareas en el rack");
         this.tasks = tasks.map(title => {
             return new Task(title, this.parameters);
