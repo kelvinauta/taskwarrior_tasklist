@@ -95,8 +95,12 @@ class MainTask{
 
 class Task {
     constructor(title, parameters){
-        this.title = title;
-        this.parameters = parameters;
+        if(!title) throw new Error("No se ingresó un título");
+        if(typeof title !== 'string') throw new TypeError("El título debe ser un string");
+        const DIVIDER = "|";
+        const override_parameters = title.split(DIVIDER)[1] ? convertirATextoAObjeto(title.split(DIVIDER)[1]) : {};
+        this.title = title.split(DIVIDER)[0];
+        this.parameters = {...parameters, ...override_parameters};
     }
     _cmd_build(depends){
         if(depends) this.parameters.depends = depends;
@@ -113,6 +117,7 @@ class Task {
         
         return validate;
     }
+
     async run(depends){
         const cmd = this._cmd_build(depends)
         const task_warrior_output = await runCommand(cmd);
